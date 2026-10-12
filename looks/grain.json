@@ -1,0 +1,47 @@
+{
+ "RAW": {
+  "amount": 1.0,
+  "size": 1.6,
+  "colour": 0.3
+ },
+ "FLASH": {
+  "amount": 1.016,
+  "size": 0.9,
+  "colour": 0.18
+ },
+ "FEVER": {
+  "amount": 1.376,
+  "size": 1.25,
+  "colour": 0.35
+ },
+ "HUSH": {
+  "amount": 0.881,
+  "size": 1.137,
+  "colour": 0.35
+ },
+ "RUSH": {
+  "amount": 0.728,
+  "size": 0.9,
+  "colour": 0.18
+ },
+ "CLUB": {
+  "amount": 1.294,
+  "size": 1.6,
+  "colour": 0.35
+ },
+ "AFTER": {
+  "amount": 1.651,
+  "size": 1.95,
+  "colour": 0.22
+ },
+ "ACID": {
+  "amount": 1.001,
+  "size": 1.6,
+  "colour": 0.35
+ },
+ "INK": {
+  "amount": 1.35,
+  "size": 1.9,
+  "colour": 0.0
+ }
+}
