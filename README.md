@@ -15,12 +15,12 @@ sweep), then FLASH, FEVER, HUSH, RUSH, CLUB, AFTER and ACID.*
 | Look | Modelled from | How it's rendered |
 |---|---|---|
 | FLASH | Kodak Ektachrome E100VS | A vivid slide, projected |
-| FEVER | Kodak Gold 200 | Exposed a stop over, lab-scanned, a quarter of a print mixed in |
-| HUSH | Fujicolor Pro 160S | Exposed a stop over, lab-scanned, a quarter of a print mixed in |
-| RUSH | Fujichrome Velvia 100 | A saturated slide, projected |
-| CLUB | Fujicolor Pro 400H | Lab-scanned, a quarter of a print mixed in |
-| AFTER | Kodak Portra 800 | Printed on Kodak Endura Premier paper |
-| ACID | Fujicolor Superia X-TRA 400 | Exposed a stop under, lab-scanned, a quarter of a print mixed in |
+| FEVER | Kodak Gold 200 | Exposed a stop over, scanned slightly soft |
+| HUSH | Kodak Portra 400 | Exposed a stop over, scanned slightly soft |
+| RUSH | Fujichrome Velvia 100 | A saturated slide, projected in a lit room |
+| CLUB | Agfa Ultra 100 | Exposed a stop under, scanned soft, a quarter of a print mixed in |
+| AFTER | Kodak Portra 800 | Scanned soft, half of a print on Kodak Endura Premier mixed in |
+| ACID | Fujicolor Superia X-TRA 400 | Exposed a stop under, scanned soft |
 
 These are models built from published curves, not the films themselves. They
 haven't been checked against real scans. The film names credit the datasheets
@@ -51,6 +51,36 @@ Fujifilm or Agfa.
 No colour is adjusted by hand for any hue. Every colour shift, including how
 reds deepen and how greens drift, comes from the datasheets. Every look keeps
 mid grey neutral.
+
+## Fair to every complexion
+
+For decades, colour film and its printing were calibrated on pale skin, and
+deep skin paid for it. These looks don't repeat that. Each one has to pass a
+test across ten complexions, from the palest to the deepest, under warm,
+white and cool light:
+
+- **Brightness:** pale and deep skin must move the same way, and by about the
+  same amount (within 8 of 255 end to end). Deep skin is never pushed down
+  by more than 6.
+- **Colour:** deep skin must keep at least 85% of its colour, so it never
+  looks ashy, and pale skin is never pushed orange.
+
+This test changed the looks. A dark grey and the deepest skin are nearly the
+same brightness, so a look can't crush its shadows without darkening deep
+skin. The looks therefore get their character from each film's colour
+rather than from a steep tone curve. Three settings in `bake.py` make that
+work:
+
+- **`contrast`:** how hard the scanner is set, often slightly softer than the
+  film.
+- **`print`:** how much of a print is mixed in.
+- **`flare`:** stray light, which a projected slide always has because it's
+  seen in a room, lifting the deepest tones.
+
+The settings were found by search, as the densest blacks that still pass the
+test. Two films failed it however they were scanned: Fujicolor Pro 160S and
+Pro 400H take about a quarter of deep skin's colour away. HUSH and CLUB use
+other films.
 
 The film model and the datasheet curves come from
 [RAWmakase](https://github.com/pch/rawmakase/pull/404) (MIT). RAWmakase reads
@@ -134,9 +164,9 @@ the Agfa films.
   each dye's peak; the three dyes of Kodak's negatives, estimated from a
   neutral's total density; an sRGB scanner; a 3200 K enlarger lamp; 1% print
   viewing flare; and a phone's tone curve that resembles the DNG default.
-- **Skin:** the printed and slide looks (AFTER, RUSH, FLASH) add real
-  contrast, and they can darken deep complexions more than light ones. Check
-  faces.
+- **Skin:** every look passes the test above, which uses one ladder of
+  skin tones. Still check faces in your own photos, and tell us if a look
+  treats someone unfairly.
 
 ## Licence
 
