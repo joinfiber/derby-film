@@ -729,7 +729,7 @@ def grain_character(look):
 
 def write_grain_table(path, characters):
     rows = ''.join(
-        f"  '{key}': DerbyFilmGrain(amount: {c['amount']:.3f}, size: {c['size']:.3f}, "
+        f"      '{key}': DerbyFilmGrain(amount: {c['amount']:.3f}, size: {c['size']:.3f}, "
         f"colour: {c['colour']:.3f}),\n"
         for key, c in characters.items())
     path.write_text(
@@ -737,8 +737,9 @@ def write_grain_table(path, characters):
         '// Do not edit; run the tool again.\n\n'
         "import 'derby_film_grain_model.dart';\n\n"
         '/// Each look\'s grain, keyed by its strip name.\n'
-        'const Map<String, DerbyFilmGrain> derbyFilmGrainByLook = <String, DerbyFilmGrain>{\n'
-        f'{rows}}};\n')
+        'const Map<String, DerbyFilmGrain> derbyFilmGrainByLook =\n'
+        '    <String, DerbyFilmGrain>{\n'
+        f'{rows}    }};\n')
 
 
 # Grain, as RAWmakase reads it from a datasheet: a published rms granularity
@@ -791,7 +792,7 @@ def grain_character(look):
 
 def write_grain_table(path, characters):
     rows = ''.join(
-        f"  '{key}': DerbyFilmGrain(amount: {c['amount']:.3f}, size: {c['size']:.3f}, "
+        f"      '{key}': DerbyFilmGrain(amount: {c['amount']:.3f}, size: {c['size']:.3f}, "
         f"colour: {c['colour']:.3f}),\n"
         for key, c in characters.items())
     path.write_text(
@@ -799,8 +800,9 @@ def write_grain_table(path, characters):
         '// Do not edit; run the tool again.\n\n'
         "import 'derby_film_grain_model.dart';\n\n"
         '/// Each look\'s grain, keyed by its strip name.\n'
-        'const Map<String, DerbyFilmGrain> derbyFilmGrainByLook = <String, DerbyFilmGrain>{\n'
-        f'{rows}}};\n')
+        'const Map<String, DerbyFilmGrain> derbyFilmGrainByLook =\n'
+        '    <String, DerbyFilmGrain>{\n'
+        f'{rows}    }};\n')
 
 
 def report(look, table):
