@@ -60,55 +60,91 @@ from colour.recovery import find_coefficients_Jakob2019, sd_Jakob2019  # noqa: E
 
 HERE = Path(__file__).resolve().parent
 
-# Each look: the stock; the stops a negative is exposed over or under before
-# the lab balances it (`push`); how hard the lab sets its scanner's contrast
-# (`contrast`, 1 is the film's own gamma); the share of a print on the stock's
-# paper mixed in as light (`print`, 1 is a print alone); and the stray light
-# that lifts the deepest tones of a scan, print or projection (`flare`, a share
-# of white; slides default to PROJECTION_FLARE, prints to PRINT_FLARE).
+# Each look: the stock; the stops it is exposed over or under (`push`: a
+# negative is then balanced by the lab, a slide is simply that much brighter);
+# how hard the lab sets its scanner's contrast (`contrast`, 1 is the film's
+# own gamma) and where that contrast hinges (`hinge`, stops below mid grey:
+# the tone that comes out exactly as it went in); how much of the film's
+# own layer mismatch the lab leaves in (`crossover`, 1 is the stock's own,
+# negative is over-corrected: shadows and highlights drift into opposite
+# casts while grey stays grey); the share of a print on the
+# stock's paper mixed in as light (`print`, 1 is a print alone); the stray
+# light that lifts the deepest tones of a scan, print or projection (`flare`,
+# a share of white; slides default to PROJECTION_FLARE, prints to
+# PRINT_FLARE); and then what the lab does with the picture (`finish()`):
+# the print's density (`exposure`, stops), its fade (`fade`, black lifted by
+# a share of white), how loudly the film's own colour is spoken (`amplify`,
+# the film's hue shifts and casts scaled in Oklab) and the result's chroma
+# (`colour`).
 #
-# Every look is fair to every complexion: pale and deep skin move by about the
-# same amount and the same way, and deep skin is never pushed down. Film has a
-# long history of being calibrated for pale skin; these looks don't add to it.
-# A dark grey and the deepest skin are nearly the same brightness, so no look
-# can crush its shadows without darkening deep skin. The looks' character
-# comes from the films' colour (their dyes, layer sensitivities and hue
-# shifts) and from density below the darkest skin, not from a steep tone
-# curve. The settings were found by searching contrast, print and flare for
-# the densest blacks that keep a ten-tone complexion ladder, under warm, white
-# and cool light, within 8 of 255 from end to end, with deep skin within 6 of
-# where it was, and that keep at least 88% of deep skin's colour.
+# The intensity is set against what people reach for. Measured the same way,
+# the popular filters sit at a mid-tone contrast of 1.1 to 1.3 times the
+# photograph's, keep 1.0 to 1.3 times its colour, and above all move the
+# whole picture: a third of a stop up into a fade (Juno, Gingham, Valencia)
+# or the shadows down (Clarendon, Lo-Fi). A film scan on its own is quieter
+# than any of them, which reads as a better version of the photograph rather
+# than an expression, so each look is finished to that level: a floating
+# look (TOASTY, DREAMY, BLUSH, MOONLIT) is printed light with a faded black, a
+# sinking one (CHILLY, ZESTY) dense.
+#
+# Every look is fair to every complexion, measured in stops, which is the
+# unit skin is seen in. A lab scanner hinged on mid grey lifts pale skin and
+# pushes deep skin down, because mid grey is where a pale face's shadow side
+# sits: the Shirley-card bias, restated. These scans hinge a stop and a half
+# lower, on the middle of a ten-tone complexion ladder, so pale and deep skin
+# move by about the same amount in opposite directions around the middle of
+# the range of faces; a floating look lifts deep skin at least as much as
+# pale; no look takes deep skin down more than half a stop, and deep skin
+# keeps between 85% and 150% of its colour (Clarendon gives it 157%) while
+# pale skin keeps under 130%. A slide has no lab, so it is exposed a fraction
+# of a stop over for the faces in it. Within those bounds each look was
+# searched for the most colour and the strongest tone.
 LOOKS = {
-    # A vivid slide, projected.
-    'flash': {'stock': 'ektachrome-e100vs'},
-    # A warm consumer negative, a stop over, scanned a little soft.
-    'heat': {'stock': 'gold-200', 'push': 1, 'contrast': 0.95},
-    # A portrait negative a stop over, the airy pastel of overexposed Portra.
-    # (Fujicolor Pro 160S and 400H take a quarter of deep skin's colour away,
-    # which reads as ashy, however they are scanned or printed.)
-    'hush': {'stock': 'portra-400', 'push': 1, 'contrast': 0.95},
-    # The most saturated slide, projected in a lit room.
-    'rush': {'stock': 'velvia-100', 'flare': 0.0175},
-    # A cool negative a stop under: teal shadows, scanned soft, with a
-    # quarter of a print.
-    'club': {'stock': 'agfa-ultra-100', 'push': -1, 'contrast': 0.85, 'print': 0.25},
-    # Fuji's greens, a stop under, scanned soft.
-    'acid': {'stock': 'superia-xtra-400', 'push': -1, 'contrast': 0.85},
-    # A fast negative, half scanned and half printed on Endura.
-    'night': {'stock': 'portra-800', 'contrast': 0.85, 'print': 0.5, 'flare': 0.01},
+    # A vivid slide, projected, exposed half a stop over for the faces.
+    'flash': {'stock': 'ektachrome-e100vs', 'push': 0.5, 'flare': 0.004},
+    # A warm consumer negative a stop over, scanned hard with a quarter of a
+    # print and twice its own layer mismatch left in: warm shadows, cool
+    # whites. Hot skin, not orange skin.
+    'heat': {'stock': 'gold-200', 'push': 1, 'contrast': 1.15, 'hinge': 1.5, 'print': 0.25,
+             'crossover': 1.5, 'colour': 1.15},
+    # A portrait negative a stop over, the airy pastel of overexposed Portra,
+    # scanned soft with its mismatch left in (warm shadows under cool, faded
+    # highlights), printed light and faded, its colour kept quiet. (Fujicolor
+    # Pro 160S and 400H take a quarter of deep skin's colour away however
+    # they are scanned.)
+    'hush': {'stock': 'portra-400', 'push': 1, 'contrast': 1.1, 'hinge': 1.5,
+             'crossover': 1.5, 'colour': 1.0, 'exposure': 0.15, 'fade': 0.02},
+    # The slide with the deepest reds, a quarter stop over for the faces,
+    # faded as an old slide is. (Velvia darkens deep skin a full stop at any
+    # exposure, and blows pale skin out before it stops: never made for faces.)
+    'rush': {'stock': 'kodachrome-64', 'push': 0.25, 'flare': 0.004,
+             'amplify': 1.5, 'colour': 1.2, 'exposure': 0.15, 'fade': 0.02},
+    # A cool negative a stop under: teal shadows, scanned hard with a quarter
+    # of a print, dense.
+    'club': {'stock': 'agfa-ultra-100', 'push': -1, 'contrast': 1.15, 'hinge': 1.5, 'print': 0.25,
+             'colour': 1.35},
+    # Fuji's greens at box speed, scanned a little hard, dense. (A stop under,
+    # the look ZESTY was first made as, drops deep skin into Superia's toe.)
+    'acid': {'stock': 'superia-xtra-400', 'push': 0, 'contrast': 1.1, 'hinge': 1.5,
+             'colour': 1.5},
+    # A fast negative half printed on Endura, printed dense, with its
+    # mismatch over-corrected the way a late lab does: blue-black shadows
+    # under warm, flash-lit skin.
+    'night': {'stock': 'portra-800', 'contrast': 1.2, 'hinge': 1.5, 'print': 0.5,
+              'crossover': -1.5, 'colour': 1.1, 'exposure': -0.05},
 }
 # The names Derby shows. The stocks are named only to credit their
 # datasheets: these are models, not the films, and nobody's trademark.
 NAMES = {
-    'flash': 'FLASH', 'heat': 'FEVER', 'hush': 'HUSH', 'rush': 'RUSH',
-    'club': 'CLUB', 'night': 'AFTER', 'acid': 'ACID',
+    'flash': 'SUNSHINE', 'heat': 'TOASTY', 'hush': 'DREAMY', 'rush': 'BLUSH',
+    'club': 'CHILLY', 'night': 'MOONLIT', 'acid': 'ZESTY',
 }
-# Derby's combinable looks. INK is Derby's own black-and-white curve, not a
+# Derby's combinable looks. INKY is Derby's own black-and-white curve, not a
 # film model, so it lives in the app and is read from its strip.
 CREATIVE = ('flash', 'heat', 'hush', 'rush', 'club', 'night', 'acid', 'ink')
 # A pair's share of its first-named look. Derby's slider crossfades `a+b`
 # and `b+a`, so it moves the pair between 65/35 and 35/65.
-PAIR_LEAN = 0.65
+PAIR_LEAN = 0.5
 SIZE = 33
 
 SHAPE = colour.SpectralShape(380, 730, 5)
@@ -337,10 +373,13 @@ def blackbody(k):
 
 
 class Model:
-    def __init__(self, film, paper=None, push=0, contrast=1.0, flare=None):
+    def __init__(self, film, paper=None, push=0, contrast=1.0, flare=None, hinge=0.0,
+                 crossover=0.0):
         self.film = film
         self.contrast = contrast
         self.flare = flare
+        self.hinge = hinge
+        self.crossover = crossover
         spectra, residual = jakob_shapes()
         cc = colorchecker()
         k = np.linalg.lstsq(reflectance_xyz(cc), film.exposure(cc), rcond=None)[0].T
@@ -348,8 +387,8 @@ class Model:
         if film.kind == 'negative':
             self.log_h_ref = film.data.get('log_h_ref', np.log10(REF_H_ISO / film.data['iso']))
         else:
-            if push:
-                raise ValueError('push and pull are for negatives')
+            # A slide has no lab to balance it, so `push` is plain exposure:
+            # a slide exposed a fraction of a stop over for the faces in it.
             light = blackbody(film.data.get('viewing_illuminant_k', VIEWING_K))
             self.film_dyes = Dyes(film, light, flare=PROJECTION_FLARE if flare is None else flare)
             self.log_h_ref = self.film_dyes.reference_exposure()
@@ -393,10 +432,30 @@ class Model:
         # A lab scanner balanced on grey, its contrast set `contrast` times the
         # film's own gamma: the straight part stays neutral, and blacks and
         # whites move apart around mid grey.
-        steep = self.contrast / self.gamma
-        positive = SCENE_GRAY * 10 ** ((d - self.d_gray) * steep)
-        base = SCENE_GRAY * 10 ** ((self.d_min - self.d_gray) * steep)
-        positive = SCENE_GRAY * (positive - base) / (SCENE_GRAY - base)
+        # A film's three layers have three gammas, and a lab balances them away
+        # so that grey stays grey at every density. `crossover` leaves a share
+        # of that mismatch in (1 is the stock's own, 2 twice it): the hinge tone
+        # stays neutral and the shadows and highlights drift apart into the
+        # casts the stock's own curves give, one way below, the other above.
+        # It is the look of film printed or scanned without a full correction,
+        # and it is each stock's own.
+        balanced = self.gamma ** (1 - self.crossover) * np.exp(np.log(self.gamma).mean()) ** self.crossover
+        steep = self.contrast / balanced
+        # Where the scanner's contrast hinges: mid grey, or `hinge` stops
+        # below it, the tone that comes out exactly as it went in.
+        hinge_gray = SCENE_GRAY * 2 ** -self.hinge
+        d_hinge = density(self.film.curves, np.full(3, self.log_h_gray - self.hinge * np.log10(2)))
+        positive = hinge_gray * 10 ** ((d - d_hinge) * steep)
+        base = hinge_gray * 10 ** ((self.d_min - d_hinge) * steep)
+        if self.crossover:
+            # The lab's colour balance is on mid grey whatever the contrast
+            # hinges on, so with the mismatch left in, grey stays grey and the
+            # shadows and highlights take opposite casts: the stock's own
+            # below, their complement above. Brightness at grey is unchanged.
+            at_gray = hinge_gray * 10 ** ((self.d_gray - d_hinge) * steep)
+            neutral = np.exp(np.log(at_gray).mean()) / at_gray
+            positive, base = positive * neutral, base * neutral
+        positive = hinge_gray * (positive - base) / (hinge_gray - base)
         out = hue_preserving(positive @ self.matrix.T, tone)
         # A scanner's own flare: stray light in its optics lifts the deepest
         # tones by a share of its white, as a viewing room does a print's.
@@ -568,7 +627,8 @@ class Look:
         paper = Film(datasheet(PAPERS[data['kind']])) if share > 0 else None
         flare = spec.get('flare')
         self.primary = Model(film, paper if share >= 1 else None, push,
-                             spec.get('contrast', 1.0), flare)
+                             spec.get('contrast', 1.0), flare, spec.get('hinge', 0.0),
+                             spec.get('crossover', 0.0))
         self.printed = Model(film, paper, push, flare=flare) if 0 < share < 1 else None
         self.share = share
         self.gamma = self.primary.gamma
@@ -588,15 +648,60 @@ def build_model(look):
     return Look(LOOKS[look])
 
 
+# Oklab (Björn Ottosson, 2020): a perceptual space whose hue stays put as
+# lightness and chroma change, used only to amplify a look's own colour.
+OKLAB_M1 = np.array([[0.4122214708, 0.5363325363, 0.0514459929],
+                     [0.2119034982, 0.6806995451, 0.1073969566],
+                     [0.0883024619, 0.2817188376, 0.6299787005]])
+OKLAB_M2 = np.array([[0.2104542553, 0.7936177850, -0.0040720468],
+                     [1.9779984951, -2.4285922050, 0.4505937099],
+                     [0.0259040371, 0.7827717662, -0.8086757660]])
+OKLAB_M1_INV = np.linalg.inv(OKLAB_M1)
+OKLAB_M2_INV = np.linalg.inv(OKLAB_M2)
+
+
+def oklab(lin):
+    return np.cbrt(np.maximum(lin @ OKLAB_M1.T, 0)) @ OKLAB_M2.T
+
+
+def from_oklab(lab):
+    return ((lab @ OKLAB_M2_INV.T) ** 3) @ OKLAB_M1_INV.T
+
+
+def finish(identity, out, spec):
+    """What the lab does after the film: the print's density and its fade,
+    and how loudly the film's own colour is spoken. Linear sRGB in and out.
+
+    `exposure` moves the whole picture, in stops. `fade` lifts black by a share
+    of white, as a print seen in a bright room, or a scan with its black point
+    set high, is lifted. `amplify` scales the look's own colour change, the
+    hue shifts and casts the film gives each colour relative to the untouched
+    photograph, in Oklab, so a film that deepens reds and quiets blues does
+    more of exactly that; `colour` then scales the result's chroma. Lightness
+    is left to the lab's contrast and hinge."""
+    out = out * 2 ** spec.get('exposure', 0.0) + spec.get('fade', 0.0)
+    k, g = spec.get('amplify', 1.0), spec.get('colour', 1.0)
+    if k != 1.0 or g != 1.0:
+        before = oklab(np.clip(identity, 0, 1))
+        after = oklab(np.maximum(out, 0))
+        ab = (before[..., 1:] + k * (after[..., 1:] - before[..., 1:])) * g
+        out = from_oklab(np.concatenate([after[..., :1], ab], axis=-1))
+    return out
+
+
+def render(spec, srgb):
+    """Encoded sRGB colours through a look, as the strip is baked."""
+    look = Look(spec)
+    lin = srgb_decode(srgb)
+    scene = hue_preserving(lin @ SRGB_TO_PRO.T, untone)
+    out = look.display(scene.reshape(-1, 3)).reshape(srgb.shape) @ PRO_TO_SRGB.T
+    return srgb_encode(into_gamut(finish(lin, out, spec)))
+
+
 def bake(look, data_dir):
     """The look's strip as sRGB-encoded floats, shaped like `strip_grid()`."""
     load_data(data_dir)
-    model = build_model(look)
-    grid = strip_grid()
-    display = srgb_decode(grid) @ SRGB_TO_PRO.T
-    scene = hue_preserving(display, untone)
-    out = model.display(scene.reshape(-1, 3)).reshape(grid.shape)
-    return look, srgb_encode(into_gamut(out @ PRO_TO_SRGB.T))
+    return look, render(LOOKS[look], strip_grid())
 
 
 def sample(table, rgb):
@@ -620,12 +725,35 @@ def mix(a, b, share):
     return srgb_encode(share * srgb_decode(a) + (1 - share) * srgb_decode(b))
 
 
+def over(base, top, share):
+    """`top` applied over the finished `base`, leaned in by `share`: the first
+    look whole, the second on top of it."""
+    stacked = sample(top, base)
+    return srgb_encode(share * srgb_decode(stacked) + (1 - share) * srgb_decode(base))
+
+
+def within_parents(table, a, b):
+    """A pair may be both its looks but never beyond either: at every colour
+    its lightness stays between its parents' and its chroma under the more
+    coloured parent's. Two looks stacked brightened olive skin two thirds of
+    a stop and coloured it half again, which read as blown out; the casts and
+    the hue, which are the pair's character, are left alone."""
+    lab = oklab(srgb_decode(table))
+    la, lb = oklab(srgb_decode(a)), oklab(srgb_decode(b))
+    light = np.clip(lab[..., :1], np.minimum(la[..., :1], lb[..., :1]), np.maximum(la[..., :1], lb[..., :1]))
+    chroma = np.linalg.norm(lab[..., 1:], axis=-1, keepdims=True)
+    allowed = np.maximum(np.linalg.norm(la[..., 1:], axis=-1, keepdims=True),
+                         np.linalg.norm(lb[..., 1:], axis=-1, keepdims=True))
+    ab = lab[..., 1:] * np.minimum(1.0, allowed / np.maximum(chroma, 1e-6))
+    return srgb_encode(into_gamut(from_oklab(np.concatenate([light, ab], axis=-1))))
+
+
 def pair(tables, a, b):
-    if b == 'ink':
-        return sample(tables['ink'], tables[a])
-    if a == 'ink':
-        return mix(sample(tables['ink'], tables[b]), tables['ink'], 0.5)
-    return mix(tables[a], tables[b], PAIR_LEAN)
+    """The `a+b` strip: look a whole, with look b over it, held within what
+    either parent does. Nobody else offers pairs, and a pair that was a
+    crossfade read as a softer third look. Derby's slider runs between `a+b`
+    and `b+a`, so its middle is both looks, each over the other."""
+    return within_parents(over(tables[a], tables[b], PAIR_LEAN), tables[a], tables[b])
 
 
 def write_png(path, table):
@@ -689,7 +817,7 @@ def read_png(path):
 GRAIN_NOISE_PER_AMOUNT = 0.0093
 GRAIN_APERTURE = 1.15
 PGI_REF = (37, 3)
-# RAW is graded by nothing, so it borrows the reference grain; INK is a
+# RAW is graded by nothing, so it borrows the reference grain; INKY is a
 # black-and-white stock Derby has no datasheet for, so it is stated: a fast
 # panchromatic film's coarse, colourless grain.
 RAW_GRAIN = {'amount': 1.0, 'size': 1.6, 'colour': 0.3}
@@ -752,7 +880,7 @@ def write_grain_table(path, characters):
 GRAIN_NOISE_PER_AMOUNT = 0.0093
 GRAIN_APERTURE = 1.15
 PGI_REF = (37, 3)
-# RAW is graded by nothing, so it borrows the reference grain; INK is a
+# RAW is graded by nothing, so it borrows the reference grain; INKY is a
 # black-and-white stock Derby has no datasheet for, so it is stated: a fast
 # panchromatic film's coarse, colourless grain.
 RAW_GRAIN = {'amount': 1.0, 'size': 1.6, 'colour': 0.3}

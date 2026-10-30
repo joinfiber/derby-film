@@ -8,19 +8,19 @@ own editor as `.cube` LUTs, or in a Flutter app as a fragment shader.
 ![The looks over a test chart](docs/swatches.png)
 
 *From the top: the untouched chart (ColorChecker patches, a grey ramp, a hue
-sweep), then FLASH, FEVER, HUSH, RUSH, CLUB, AFTER and ACID.*
+sweep), then SUNSHINE, TOASTY, DREAMY, BLUSH, CHILLY, MOONLIT and ZESTY.*
 
 ## The looks
 
 | Look | Modelled from | How it's rendered |
 |---|---|---|
-| FLASH | Kodak Ektachrome E100VS | A vivid slide, projected |
-| FEVER | Kodak Gold 200 | Exposed a stop over, scanned slightly soft |
-| HUSH | Kodak Portra 400 | Exposed a stop over, scanned slightly soft |
-| RUSH | Fujichrome Velvia 100 | A saturated slide, projected in a lit room |
-| CLUB | Agfa Ultra 100 | Exposed a stop under, scanned soft, a quarter of a print mixed in |
-| AFTER | Kodak Portra 800 | Scanned soft, half of a print on Kodak Endura Premier mixed in |
-| ACID | Fujicolor Superia X-TRA 400 | Exposed a stop under, scanned soft |
+| SUNSHINE | Kodak Ektachrome E100VS | A vivid slide, projected, exposed half a stop over for the faces |
+| TOASTY | Kodak Gold 200 | Exposed a stop over, scanned hard, a quarter of a print mixed in |
+| DREAMY | Kodak Portra 400 | Exposed a stop over, scanned a little hard, a quarter of a print mixed in |
+| BLUSH | Kodachrome 64 | The slide with the deepest reds, projected, a quarter stop over for the faces |
+| CHILLY | Agfa Ultra 100 | Exposed a stop under, scanned hard, a quarter of a print mixed in |
+| MOONLIT | Kodak Portra 800 | Scanned a little hard, a quarter of a print on Kodak Endura Premier mixed in |
+| ZESTY | Fujicolor Superia X-TRA 400 | At box speed, scanned a little hard |
 
 These are models built from published curves, not the films themselves. They
 haven't been checked against real scans. The film names credit the datasheets
@@ -41,16 +41,17 @@ Fujifilm or Agfa.
    dye density. Exposure decides where a colour sits on the film's toe and
    shoulder, which is where film's soft highlights and dense shadows come from.
 4. **Make a picture.** One of three ways:
-   - **Scanned negative:** each channel is inverted and balanced on grey, as a
-     lab scanner does. `contrast` sets the scanner harder than the film.
+   - **Scanned negative:** each channel is inverted and balanced, as a lab
+     scanner does. `contrast` sets the scanner harder than the film, and
+     `hinge` is the tone it is balanced on, in stops below mid grey.
    - **Projected slide:** the slide's dyes are seen under projector light.
    - **Print:** an enlarger lamp shines through the film's dyes onto the
      paper's own layers, and the print is seen under daylight. `print` mixes
      a share of the print into a scan, as light.
 
-No colour is adjusted by hand for any hue. Every colour shift, including how
-reds deepen and how greens drift, comes from the datasheets. Every look keeps
-mid grey neutral.
+No colour is adjusted by hand for any hue, and nothing is saturated by hand.
+Every colour shift, including how reds deepen and how greens drift, comes
+from the datasheets. Every look keeps grey neutral.
 
 ## Fair to every complexion
 
@@ -59,28 +60,66 @@ deep skin paid for it. These looks don't repeat that. Each one has to pass a
 test across ten complexions, from the palest to the deepest, under warm,
 white and cool light:
 
-- **Brightness:** pale and deep skin must move the same way, and by about the
-  same amount (within 8 of 255 end to end). Deep skin is never pushed down
-  by more than 6.
-- **Colour:** deep skin must keep at least 85% of its colour, so it never
-  looks ashy, and pale skin is never pushed orange.
+- **Brightness, in stops:** around the middle of the ladder, a look does to
+  deep skin what it does to pale skin: the same amount in opposite directions
+  for a look that adds contrast, a lift for both for a look that floats. No
+  look takes deep skin down more than half a stop. (Stops, not 8-bit units:
+  a unit is a tenth of a stop on pale skin and a third of one on deep skin,
+  so a unit bound is secretly three times stricter on deep skin.)
+- **Colour:** deep skin keeps between 85% and 150% of its colour, so it is
+  never ashy and never the only thing the colour lands on, and pale skin is
+  never pushed orange.
 
-This test changed the looks. A dark grey and the deepest skin are nearly the
-same brightness, so a look can't crush its shadows without darkening deep
-skin. The looks therefore get their character from each film's colour
-rather than from a steep tone curve. Three settings in `bake.py` make that
-work:
+The bias is in the lab more than in the film. A lab scanner hinges its
+contrast on mid grey, and mid grey is where a pale face's shadow side sits:
+that is the Shirley card, the pale reference print labs were balanced on for
+decades, restated as arithmetic. Hinged there, any contrast at all lifts
+pale skin and pushes deep skin down, and the first version of these looks
+passed the test only by having almost no contrast. These scans hinge a stop
+and a half lower, on the middle of the complexion ladder, so pale and deep
+skin move by about the same amount, in stops, around the middle of the range
+of faces. A slide has no lab, so it is exposed a fraction of a stop over for
+the faces in it, as a careful photographer would. Five settings in
+`bake.py` make a look:
 
-- **`contrast`:** how hard the scanner is set, often slightly softer than the
-  film.
+- **`push`:** how far over or under the stock is exposed. A negative is then
+  balanced by the lab; a slide is simply that much brighter.
+- **`contrast`** and **`hinge`:** how hard the lab sets its scanner, and the
+  tone it balances it on.
+- **`crossover`:** how much of the film's own layer mismatch the lab leaves
+  in. A film's three layers have three gammas; a lab balances them away so
+  grey stays grey at every density. Left in, grey stays grey at mid grey and
+  the shadows and highlights drift into opposite casts, the stock's own
+  (warm shadows under cool highlights on the Kodak negatives); over-corrected
+  (a negative value), the other way. It is where a look's parts move in
+  different directions, and it is each stock's own.
 - **`print`:** how much of a print is mixed in.
-- **`flare`:** stray light, which a projected slide always has because it's
-  seen in a room, lifting the deepest tones.
+- **`flare`:** stray light in the scanner, the projector's room or the
+  print's, lifting the deepest tones.
 
-The settings were found by search, as the densest blacks that still pass the
-test. Two films failed it however they were scanned: Fujicolor Pro 160S and
-Pro 400H take about a quarter of deep skin's colour away. HUSH and CLUB use
-other films.
+After the film, `finish()` is what the lab does with the picture, and it is
+where the looks get their intensity: `exposure` (the print's density, in
+stops), `fade` (black lifted by a share of white, as a print seen in a bright
+room), `amplify` (the film's own hue shifts and casts, scaled in Oklab, so a
+film that deepens reds and quiets blues does more of exactly that) and
+`colour` (the result's chroma). The level is set against what people reach
+for: measured the same way, the popular Instagram filters sit at a mid-tone
+contrast of 1.1 to 1.3 times the photograph's, keep 1.0 to 1.3 times its
+colour, and above all move the whole picture, a third of a stop up into a
+fade or the shadows down. A film scan on its own is quieter than any of
+them, and reads as a better version of the photograph rather than an
+expression.
+
+The settings were found by search, as the most colour and the strongest tone
+that still pass the test. Three films failed the test
+however they were exposed or scanned: Fujicolor Pro 160S and Pro 400H take
+about a quarter of deep skin's colour away, and Fujichrome Velvia darkens
+deep skin a full stop at any exposure and blows pale skin out before it
+stops. DREAMY, CHILLY and BLUSH use other films.
+
+A look paired with INKY gives INKY the look's colour at the photograph's own
+brightness, as a colour filter in front of black-and-white film would, and
+INKY's own tone: the two contrasts are never stacked.
 
 The film model and the datasheet curves come from
 [RAWmakase](https://github.com/pch/rawmakase/pull/404) (MIT). RAWmakase reads
