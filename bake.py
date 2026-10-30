@@ -60,59 +60,50 @@ from colour.recovery import find_coefficients_Jakob2019, sd_Jakob2019  # noqa: E
 
 HERE = Path(__file__).resolve().parent
 
-# Each look: the stock; the stops a negative is exposed over or under before
-# the lab balances it (`push`); how hard the lab sets its scanner's contrast
-# (`contrast`, 1 is the film's own gamma) and its saturation (`saturation`, 1
-# is the film's own colour); the share of a print on the stock's paper mixed
-# in as light (`print`, 1 is a print alone); the stray light that lifts the
-# deepest tones of a scan, print or projection (`flare`, a share of white;
-# slides default to PROJECTION_FLARE, prints to PRINT_FLARE); and the lens's
-# veiling glare, a share of the scene's white laid over the frame before the
-# film sees it (`lens`).
+# Each look: the stock; the stops it is exposed over or under (`push`: a
+# negative is then balanced by the lab, a slide is simply that much brighter);
+# how hard the lab sets its scanner's contrast (`contrast`, 1 is the film's
+# own gamma) and where that contrast hinges (`hinge`, stops below mid grey:
+# the tone that comes out exactly as it went in); the share of a print on the
+# stock's paper mixed in as light (`print`, 1 is a print alone); and the stray
+# light that lifts the deepest tones of a scan, print or projection (`flare`,
+# a share of white; slides default to PROJECTION_FLARE, prints to
+# PRINT_FLARE).
 #
-# Every look is fair to every complexion: pale and deep skin move the same
-# way, deep skin is never pushed down by more than a few steps, and it keeps
-# its colour. Film has a long history of being calibrated for pale skin;
-# these looks don't add to it. A dark grey and the deepest skin are nearly
-# the same brightness, so a steep curve hinged at mid grey darkens deep skin
-# as it lifts pale skin. The glare is what resolves it: it exposes the deepest
-# skin a little up the toe, where a lab scanner or a print then holds it,
-# while the frame's own black stays below it. Each look was searched over
-# contrast, print, flare, saturation and glare for the densest blacks and the
-# most colour that keep a ten-tone complexion ladder, under warm, white and
-# cool light, within 27 of 255 end to end and in one direction, deep skin
-# within 5 of where it was and keeping at least 87% of its colour, with black
-# no lighter than 16 of 255. Within that, every look has a mid-tone contrast
-# of at least 1.1 times the photograph's and gives back at least the colour it
-# was given, except HUSH, whose idea is quiet colour, and the two slides,
-# whose contrast a projector's flare sets.
+# Every look is fair to every complexion, and the fix is in the lab, not in
+# the film's colour. A lab scanner hinged on mid grey lifts pale skin and
+# pushes deep skin down, because mid grey is where a pale face's shadow side
+# sits: the Shirley-card bias, restated. These scans hinge a stop and a half
+# lower, on the middle of a ten-tone complexion ladder, so pale and deep skin
+# move by about the same amount in stops, in opposite directions, around the
+# middle of the range of faces. A slide has no lab, so it is exposed a
+# fraction of a stop over for the faces in it. Each look was searched over
+# exposure, contrast, hinge, print and flare for the densest blacks that keep
+# the ladder, under warm, white and cool light, within 27 of 255 end to end
+# and in one direction, deep skin within 5 and keeping 87% of its colour,
+# with black no lighter than 16 of 255. Nothing is saturated or lifted by
+# hand: every look is the stock's own colour.
 LOOKS = {
-    # A vivid slide, projected in a dark room; the lens's glare keeps deep
-    # skin off the slide's toe.
-    'flash': {'stock': 'ektachrome-e100vs', 'flare': 0.002, 'lens': 0.006},
-    # A warm consumer negative a stop over, scanned a little hard and well
-    # saturated, with half a print mixed in for its dense blacks.
-    'heat': {'stock': 'gold-200', 'push': 1, 'contrast': 1.05, 'print': 0.5,
-             'flare': 0.002, 'saturation': 1.45, 'lens': 0.005},
+    # A vivid slide, projected, exposed half a stop over for the faces.
+    'flash': {'stock': 'ektachrome-e100vs', 'push': 0.5, 'flare': 0.004},
+    # A warm consumer negative a stop over, scanned hard, a quarter of a print.
+    'heat': {'stock': 'gold-200', 'push': 1, 'contrast': 1.15, 'hinge': 1.5, 'print': 0.25},
     # A portrait negative a stop over, the airy pastel of overexposed Portra,
-    # scanned a little hard with a quarter of a print, its colour kept quiet.
-    # (Fujicolor Pro 160S and 400H take a quarter of deep skin's colour away,
-    # which reads as ashy, however they are scanned or printed.)
-    'hush': {'stock': 'portra-400', 'push': 1, 'contrast': 1.1, 'print': 0.25,
-             'flare': 0.002, 'saturation': 1.15, 'lens': 0.005},
-    # The most saturated slide, projected; more glare, because Velvia's toe is
-    # the steepest.
-    'rush': {'stock': 'velvia-100', 'flare': 0.002, 'lens': 0.01},
-    # A cool negative a stop under: teal shadows, scanned hard and saturated.
-    'club': {'stock': 'agfa-ultra-100', 'push': -1, 'contrast': 1.2,
-             'flare': 0.002, 'saturation': 1.45, 'lens': 0.005},
-    # Fuji's greens, a stop under, scanned hardest and saturated; the extra
-    # glare is what lets its blacks go this dense.
-    'acid': {'stock': 'superia-xtra-400', 'push': -1, 'contrast': 1.25,
-             'saturation': 1.45, 'lens': 0.01},
-    # A fast negative, half scanned and half printed on Endura.
-    'night': {'stock': 'portra-800', 'contrast': 1.0, 'print': 0.5,
-              'flare': 0.002, 'saturation': 1.15, 'lens': 0.005},
+    # scanned a little hard, a quarter of a print. (Fujicolor Pro 160S and
+    # 400H take a quarter of deep skin's colour away however they are scanned.)
+    'hush': {'stock': 'portra-400', 'push': 1, 'contrast': 1.1, 'hinge': 1.5, 'print': 0.25},
+    # The slide with the deepest reds, projected, a quarter stop over for the
+    # faces. (Velvia darkens deep skin a full stop at any exposure, and blows
+    # pale skin out before it stops: it was never made for faces.)
+    'rush': {'stock': 'kodachrome-64', 'push': 0.25, 'flare': 0.004},
+    # A cool negative a stop under: teal shadows, scanned hard, a quarter of
+    # a print.
+    'club': {'stock': 'agfa-ultra-100', 'push': -1, 'contrast': 1.15, 'hinge': 1.5, 'print': 0.25},
+    # Fuji's greens at box speed, scanned a little hard. (A stop under, the
+    # look ACID was first made as, drops deep skin into Superia's toe.)
+    'acid': {'stock': 'superia-xtra-400', 'push': 0, 'contrast': 1.1, 'hinge': 1.5},
+    # A fast negative scanned a little hard, a quarter of a print on Endura.
+    'night': {'stock': 'portra-800', 'contrast': 1.1, 'hinge': 1.5, 'print': 0.25},
 }
 # The names Derby shows. The stocks are named only to credit their
 # datasheets: these are models, not the films, and nobody's trademark.
@@ -140,8 +131,6 @@ XYZ_TO_PRO = PRO.matrix_XYZ_to_RGB
 SRGB_TO_PRO = colour.matrix_RGB_to_RGB(SRGB, PRO, chromatic_adaptation_transform='Bradford')
 PRO_TO_SRGB = colour.matrix_RGB_to_RGB(PRO, SRGB, chromatic_adaptation_transform='Bradford')
 SRGB_LUMA = np.array([0.2126, 0.7152, 0.0722])
-# ProPhoto's share of luminance per channel: the Y row of its matrix.
-PRO_LUMA = PRO_TO_XYZ[1]
 
 PAPERS = {'negative': 'endura-premier', 'reversal': 'radiance-iii'}
 PRINT_FLARE = 0.01
@@ -356,11 +345,11 @@ def blackbody(k):
 
 
 class Model:
-    def __init__(self, film, paper=None, push=0, contrast=1.0, flare=None, saturation=1.0):
+    def __init__(self, film, paper=None, push=0, contrast=1.0, flare=None, hinge=0.0):
         self.film = film
         self.contrast = contrast
         self.flare = flare
-        self.saturation = saturation
+        self.hinge = hinge
         spectra, residual = jakob_shapes()
         cc = colorchecker()
         k = np.linalg.lstsq(reflectance_xyz(cc), film.exposure(cc), rcond=None)[0].T
@@ -368,8 +357,8 @@ class Model:
         if film.kind == 'negative':
             self.log_h_ref = film.data.get('log_h_ref', np.log10(REF_H_ISO / film.data['iso']))
         else:
-            if push:
-                raise ValueError('push and pull are for negatives')
+            # A slide has no lab to balance it, so `push` is plain exposure:
+            # a slide exposed a fraction of a stop over for the faces in it.
             light = blackbody(film.data.get('viewing_illuminant_k', VIEWING_K))
             self.film_dyes = Dyes(film, light, flare=PROJECTION_FLARE if flare is None else flare)
             self.log_h_ref = self.film_dyes.reference_exposure()
@@ -414,16 +403,14 @@ class Model:
         # film's own gamma: the straight part stays neutral, and blacks and
         # whites move apart around mid grey.
         steep = self.contrast / self.gamma
-        positive = SCENE_GRAY * 10 ** ((d - self.d_gray) * steep)
-        base = SCENE_GRAY * 10 ** ((self.d_min - self.d_gray) * steep)
-        positive = SCENE_GRAY * (positive - base) / (SCENE_GRAY - base)
+        # Where the scanner's contrast hinges: mid grey, or `hinge` stops
+        # below it, the tone that comes out exactly as it went in.
+        hinge_gray = SCENE_GRAY * 2 ** -self.hinge
+        d_hinge = density(self.film.curves, np.full(3, self.log_h_gray - self.hinge * np.log10(2)))
+        positive = hinge_gray * 10 ** ((d - d_hinge) * steep)
+        base = hinge_gray * 10 ** ((self.d_min - d_hinge) * steep)
+        positive = hinge_gray * (positive - base) / (hinge_gray - base)
         out = hue_preserving(positive @ self.matrix.T, tone)
-        # The scanner's saturation, set by the lab beside its contrast: every
-        # colour is pushed away from its own luminance by the same share, no
-        # hue more than another. 1 is the film's own colour.
-        if self.saturation != 1.0:
-            y = (out @ PRO_LUMA)[..., None]
-            out = y + (out - y) * self.saturation
         # A scanner's own flare: stray light in its optics lifts the deepest
         # tones by a share of its white, as a viewing room does a print's.
         scan_flare = self.flare or 0.0
@@ -594,19 +581,12 @@ class Look:
         paper = Film(datasheet(PAPERS[data['kind']])) if share > 0 else None
         flare = spec.get('flare')
         self.primary = Model(film, paper if share >= 1 else None, push,
-                             spec.get('contrast', 1.0), flare, spec.get('saturation', 1.0))
+                             spec.get('contrast', 1.0), flare, spec.get('hinge', 0.0))
         self.printed = Model(film, paper, push, flare=flare) if 0 < share < 1 else None
         self.share = share
-        self.lens = spec.get('lens', 0.0)
         self.gamma = self.primary.gamma
 
     def display(self, scene):
-        # Veiling glare: the lens scatters a share of the scene's white over
-        # the whole frame before the film sees it, so the deepest tones are
-        # exposed a little up the toe. The picture's own black, below them, is
-        # still the film's.
-        if self.lens:
-            scene = scene + self.lens
         out = self.primary.display(scene)
         if self.printed is not None:
             out = (1 - self.share) * out + self.share * self.printed.display(scene)

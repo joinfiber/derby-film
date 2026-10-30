@@ -14,13 +14,13 @@ sweep), then FLASH, FEVER, HUSH, RUSH, CLUB, AFTER and ACID.*
 
 | Look | Modelled from | How it's rendered |
 |---|---|---|
-| FLASH | Kodak Ektachrome E100VS | A vivid slide, projected |
-| FEVER | Kodak Gold 200 | Exposed a stop over, scanned a little hard and saturated, half of a print mixed in |
-| HUSH | Kodak Portra 400 | Exposed a stop over, scanned a little hard with its colour kept quiet, a quarter of a print mixed in |
-| RUSH | Fujichrome Velvia 100 | A saturated slide, projected |
-| CLUB | Agfa Ultra 100 | Exposed a stop under, scanned hard and saturated |
-| AFTER | Kodak Portra 800 | Scanned, half of a print on Kodak Endura Premier mixed in |
-| ACID | Fujicolor Superia X-TRA 400 | Exposed a stop under, scanned hardest and saturated |
+| FLASH | Kodak Ektachrome E100VS | A vivid slide, projected, exposed half a stop over for the faces |
+| FEVER | Kodak Gold 200 | Exposed a stop over, scanned hard, a quarter of a print mixed in |
+| HUSH | Kodak Portra 400 | Exposed a stop over, scanned a little hard, a quarter of a print mixed in |
+| RUSH | Kodachrome 64 | The slide with the deepest reds, projected, a quarter stop over for the faces |
+| CLUB | Agfa Ultra 100 | Exposed a stop under, scanned hard, a quarter of a print mixed in |
+| AFTER | Kodak Portra 800 | Scanned a little hard, a quarter of a print on Kodak Endura Premier mixed in |
+| ACID | Fujicolor Superia X-TRA 400 | At box speed, scanned a little hard |
 
 These are models built from published curves, not the films themselves. They
 haven't been checked against real scans. The film names credit the datasheets
@@ -41,21 +41,17 @@ Fujifilm or Agfa.
    dye density. Exposure decides where a colour sits on the film's toe and
    shoulder, which is where film's soft highlights and dense shadows come from.
 4. **Make a picture.** One of three ways:
-   - **Scanned negative:** each channel is inverted and balanced on grey, as a
-     lab scanner does. `contrast` sets the scanner harder than the film and
-     `saturation` sets its colour, every hue by the same share.
+   - **Scanned negative:** each channel is inverted and balanced, as a lab
+     scanner does. `contrast` sets the scanner harder than the film, and
+     `hinge` is the tone it is balanced on, in stops below mid grey.
    - **Projected slide:** the slide's dyes are seen under projector light.
    - **Print:** an enlarger lamp shines through the film's dyes onto the
      paper's own layers, and the print is seen under daylight. `print` mixes
      a share of the print into a scan, as light.
 
-Before any of that, `lens` adds the lens's veiling glare: a small share of
-the scene's white laid over the whole frame, as a real lens does, which
-exposes the deepest tones a little up the film's toe.
-
-No colour is adjusted by hand for any hue. Every colour shift, including how
-reds deepen and how greens drift, comes from the datasheets. Every look keeps
-mid grey neutral.
+No colour is adjusted by hand for any hue, and nothing is saturated by hand.
+Every colour shift, including how reds deepen and how greens drift, comes
+from the datasheets. Every look keeps grey neutral.
 
 ## Fair to every complexion
 
@@ -70,28 +66,33 @@ white and cool light:
 - **Colour:** deep skin must keep at least 87% of its colour, so it never
   looks ashy, and pale skin is never pushed orange.
 
-A dark grey and the deepest skin are nearly the same brightness, so a tone
-curve hinged at mid grey darkens deep skin as it lifts pale skin, and the
-first version of these looks passed the test by having almost no tone curve
-at all. What resolves it is the lens: its veiling glare exposes the deepest
-skin a little up the film's toe, where the scanner or the print then holds
-it, while the frame's own black, below any skin, stays the film's. Five
-settings in `bake.py` make a look:
+The bias is in the lab more than in the film. A lab scanner hinges its
+contrast on mid grey, and mid grey is where a pale face's shadow side sits:
+that is the Shirley card, the pale reference print labs were balanced on for
+decades, restated as arithmetic. Hinged there, any contrast at all lifts
+pale skin and pushes deep skin down, and the first version of these looks
+passed the test only by having almost no contrast. These scans hinge a stop
+and a half lower, on the middle of the complexion ladder, so pale and deep
+skin move by about the same amount, in stops, around the middle of the range
+of faces. A slide has no lab, so it is exposed a fraction of a stop over for
+the faces in it, as a careful photographer would. Five settings in
+`bake.py` make a look:
 
-- **`contrast`** and **`saturation`:** how the lab sets its scanner.
+- **`push`:** how far over or under the stock is exposed. A negative is then
+  balanced by the lab; a slide is simply that much brighter.
+- **`contrast`** and **`hinge`:** how hard the lab sets its scanner, and the
+  tone it balances it on.
 - **`print`:** how much of a print is mixed in.
 - **`flare`:** stray light in the scanner, the projector's room or the
   print's, lifting the deepest tones.
-- **`lens`:** the lens's veiling glare, before the film.
 
-The settings were found by search, as the densest blacks and the most colour
-that still pass the test, with black no lighter than 16 of 255; within that,
-every look has a mid-tone contrast at least 1.1 times the photograph's and
-gives back at least the colour it was given, except HUSH, whose idea is
-quiet colour, and the two slides, whose contrast the projector's flare sets.
-Two films failed the test however they were scanned: Fujicolor Pro 160S and
-Pro 400H take about a quarter of deep skin's colour away. HUSH and CLUB use
-other films.
+The settings were found by search, as the densest blacks that still pass the
+test, with black no lighter than 16 of 255. Nothing is saturated or lifted by
+hand: every look is the stock's own colour. Three films failed the test
+however they were exposed or scanned: Fujicolor Pro 160S and Pro 400H take
+about a quarter of deep skin's colour away, and Fujichrome Velvia darkens
+deep skin a full stop at any exposure and blows pale skin out before it
+stops. HUSH, CLUB and RUSH use other films.
 
 A look paired with INK gives INK the look's colour at the photograph's own
 brightness, as a colour filter in front of black-and-white film would, and
