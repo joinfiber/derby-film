@@ -5,14 +5,14 @@
   "colour": 0.3
  },
  "FLASH": {
-  "amount": 0.939,
+  "amount": 0.924,
   "size": 0.9,
   "colour": 0.18
  },
  "FEVER": {
   "amount": 1.376,
   "size": 1.25,
-  "colour": 0.35
+  "colour": 0.22
  },
  "HUSH": {
   "amount": 1.0,
@@ -20,17 +20,17 @@
   "colour": 0.35
  },
  "RUSH": {
-  "amount": 0.656,
+  "amount": 0.62,
   "size": 0.9,
   "colour": 0.18
  },
  "CLUB": {
-  "amount": 0.71,
+  "amount": 0.797,
   "size": 0.9,
   "colour": 0.35
  },
  "ACID": {
-  "amount": 0.693,
+  "amount": 0.812,
   "size": 1.6,
   "colour": 0.35
  },

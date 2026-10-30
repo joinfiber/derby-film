@@ -15,12 +15,12 @@ sweep), then FLASH, FEVER, HUSH, RUSH, CLUB, AFTER and ACID.*
 | Look | Modelled from | How it's rendered |
 |---|---|---|
 | FLASH | Kodak Ektachrome E100VS | A vivid slide, projected |
-| FEVER | Kodak Gold 200 | Exposed a stop over, scanned slightly soft |
-| HUSH | Kodak Portra 400 | Exposed a stop over, scanned slightly soft |
-| RUSH | Fujichrome Velvia 100 | A saturated slide, projected in a lit room |
-| CLUB | Agfa Ultra 100 | Exposed a stop under, scanned soft, a quarter of a print mixed in |
-| AFTER | Kodak Portra 800 | Scanned soft, half of a print on Kodak Endura Premier mixed in |
-| ACID | Fujicolor Superia X-TRA 400 | Exposed a stop under, scanned soft |
+| FEVER | Kodak Gold 200 | Exposed a stop over, scanned a little hard and saturated, half of a print mixed in |
+| HUSH | Kodak Portra 400 | Exposed a stop over, scanned a little hard with its colour kept quiet, a quarter of a print mixed in |
+| RUSH | Fujichrome Velvia 100 | A saturated slide, projected |
+| CLUB | Agfa Ultra 100 | Exposed a stop under, scanned hard and saturated |
+| AFTER | Kodak Portra 800 | Scanned, half of a print on Kodak Endura Premier mixed in |
+| ACID | Fujicolor Superia X-TRA 400 | Exposed a stop under, scanned hardest and saturated |
 
 These are models built from published curves, not the films themselves. They
 haven't been checked against real scans. The film names credit the datasheets
@@ -42,11 +42,16 @@ Fujifilm or Agfa.
    shoulder, which is where film's soft highlights and dense shadows come from.
 4. **Make a picture.** One of three ways:
    - **Scanned negative:** each channel is inverted and balanced on grey, as a
-     lab scanner does. `contrast` sets the scanner harder than the film.
+     lab scanner does. `contrast` sets the scanner harder than the film and
+     `saturation` sets its colour, every hue by the same share.
    - **Projected slide:** the slide's dyes are seen under projector light.
    - **Print:** an enlarger lamp shines through the film's dyes onto the
      paper's own layers, and the print is seen under daylight. `print` mixes
      a share of the print into a scan, as light.
+
+Before any of that, `lens` adds the lens's veiling glare: a small share of
+the scene's white laid over the whole frame, as a real lens does, which
+exposes the deepest tones a little up the film's toe.
 
 No colour is adjusted by hand for any hue. Every colour shift, including how
 reds deepen and how greens drift, comes from the datasheets. Every look keeps
@@ -59,28 +64,38 @@ deep skin paid for it. These looks don't repeat that. Each one has to pass a
 test across ten complexions, from the palest to the deepest, under warm,
 white and cool light:
 
-- **Brightness:** pale and deep skin must move the same way, and by about the
-  same amount (within 8 of 255 end to end). Deep skin is never pushed down
-  by more than 6.
-- **Colour:** deep skin must keep at least 85% of its colour, so it never
+- **Brightness:** pale and deep skin must move the same way, and the whole
+  ladder within 27 of 255 end to end. Deep skin is never pushed down by more
+  than 5.
+- **Colour:** deep skin must keep at least 87% of its colour, so it never
   looks ashy, and pale skin is never pushed orange.
 
-This test changed the looks. A dark grey and the deepest skin are nearly the
-same brightness, so a look can't crush its shadows without darkening deep
-skin. The looks therefore get their character from each film's colour
-rather than from a steep tone curve. Three settings in `bake.py` make that
-work:
+A dark grey and the deepest skin are nearly the same brightness, so a tone
+curve hinged at mid grey darkens deep skin as it lifts pale skin, and the
+first version of these looks passed the test by having almost no tone curve
+at all. What resolves it is the lens: its veiling glare exposes the deepest
+skin a little up the film's toe, where the scanner or the print then holds
+it, while the frame's own black, below any skin, stays the film's. Five
+settings in `bake.py` make a look:
 
-- **`contrast`:** how hard the scanner is set, often slightly softer than the
-  film.
+- **`contrast`** and **`saturation`:** how the lab sets its scanner.
 - **`print`:** how much of a print is mixed in.
-- **`flare`:** stray light, which a projected slide always has because it's
-  seen in a room, lifting the deepest tones.
+- **`flare`:** stray light in the scanner, the projector's room or the
+  print's, lifting the deepest tones.
+- **`lens`:** the lens's veiling glare, before the film.
 
-The settings were found by search, as the densest blacks that still pass the
-test. Two films failed it however they were scanned: Fujicolor Pro 160S and
+The settings were found by search, as the densest blacks and the most colour
+that still pass the test, with black no lighter than 16 of 255; within that,
+every look has a mid-tone contrast at least 1.1 times the photograph's and
+gives back at least the colour it was given, except HUSH, whose idea is
+quiet colour, and the two slides, whose contrast the projector's flare sets.
+Two films failed the test however they were scanned: Fujicolor Pro 160S and
 Pro 400H take about a quarter of deep skin's colour away. HUSH and CLUB use
 other films.
+
+A look paired with INK gives INK the look's colour at the photograph's own
+brightness, as a colour filter in front of black-and-white film would, and
+INK's own tone: the two contrasts are never stacked.
 
 The film model and the datasheet curves come from
 [RAWmakase](https://github.com/pch/rawmakase/pull/404) (MIT). RAWmakase reads
