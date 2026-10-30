@@ -84,8 +84,8 @@ HERE = Path(__file__).resolve().parent
 # or the shadows down (Clarendon, Lo-Fi). A film scan on its own is quieter
 # than any of them, which reads as a better version of the photograph rather
 # than an expression, so each look is finished to that level: a floating
-# look (GOLDIE, MOON, CHERRY, CURFEW) is printed light with a faded black, a
-# sinking one (POOL, LIME) dense.
+# look (TOASTY, DREAMY, BLUSH, MOONLIT) is printed light with a faded black, a
+# sinking one (CHILLY, ZESTY) dense.
 #
 # Every look is fair to every complexion, measured in stops, which is the
 # unit skin is seen in. A lab scanner hinged on mid grey lifts pale skin and
@@ -124,7 +124,7 @@ LOOKS = {
     'club': {'stock': 'agfa-ultra-100', 'push': -1, 'contrast': 1.15, 'hinge': 1.5, 'print': 0.25,
              'colour': 1.35},
     # Fuji's greens at box speed, scanned a little hard, dense. (A stop under,
-    # the look LIME was first made as, drops deep skin into Superia's toe.)
+    # the look ZESTY was first made as, drops deep skin into Superia's toe.)
     'acid': {'stock': 'superia-xtra-400', 'push': 0, 'contrast': 1.1, 'hinge': 1.5,
              'colour': 1.5},
     # A fast negative half printed on Endura, printed dense, with its
@@ -136,10 +136,10 @@ LOOKS = {
 # The names Derby shows. The stocks are named only to credit their
 # datasheets: these are models, not the films, and nobody's trademark.
 NAMES = {
-    'flash': 'NOON', 'heat': 'GOLDIE', 'hush': 'MOON', 'rush': 'CHERRY',
-    'club': 'POOL', 'night': 'CURFEW', 'acid': 'LIME',
+    'flash': 'SUNSHINE', 'heat': 'TOASTY', 'hush': 'DREAMY', 'rush': 'BLUSH',
+    'club': 'CHILLY', 'night': 'MOONLIT', 'acid': 'ZESTY',
 }
-# Derby's combinable looks. INK is Derby's own black-and-white curve, not a
+# Derby's combinable looks. INKY is Derby's own black-and-white curve, not a
 # film model, so it lives in the app and is read from its strip.
 CREATIVE = ('flash', 'heat', 'hush', 'rush', 'club', 'night', 'acid', 'ink')
 # A pair's share of its first-named look. Derby's slider crossfades `a+b`
@@ -817,7 +817,7 @@ def read_png(path):
 GRAIN_NOISE_PER_AMOUNT = 0.0093
 GRAIN_APERTURE = 1.15
 PGI_REF = (37, 3)
-# RAW is graded by nothing, so it borrows the reference grain; INK is a
+# RAW is graded by nothing, so it borrows the reference grain; INKY is a
 # black-and-white stock Derby has no datasheet for, so it is stated: a fast
 # panchromatic film's coarse, colourless grain.
 RAW_GRAIN = {'amount': 1.0, 'size': 1.6, 'colour': 0.3}
@@ -880,7 +880,7 @@ def write_grain_table(path, characters):
 GRAIN_NOISE_PER_AMOUNT = 0.0093
 GRAIN_APERTURE = 1.15
 PGI_REF = (37, 3)
-# RAW is graded by nothing, so it borrows the reference grain; INK is a
+# RAW is graded by nothing, so it borrows the reference grain; INKY is a
 # black-and-white stock Derby has no datasheet for, so it is stated: a fast
 # panchromatic film's coarse, colourless grain.
 RAW_GRAIN = {'amount': 1.0, 'size': 1.6, 'colour': 0.3}

@@ -4,37 +4,37 @@
   "size": 1.6,
   "colour": 0.3
  },
- "NOON": {
+ "SUNSHINE": {
   "amount": 0.876,
   "size": 0.9,
   "colour": 0.18
  },
- "GOLDIE": {
+ "TOASTY": {
   "amount": 1.376,
   "size": 1.25,
   "colour": 0.35
  },
- "MOON": {
+ "DREAMY": {
   "amount": 1.0,
   "size": 1.6,
   "colour": 0.35
  },
- "CHERRY": {
+ "BLUSH": {
   "amount": 0.871,
   "size": 0.9,
   "colour": 0.18
  },
- "POOL": {
+ "CHILLY": {
   "amount": 0.795,
   "size": 0.9,
   "colour": 0.35
  },
- "LIME": {
+ "ZESTY": {
   "amount": 0.781,
   "size": 1.6,
   "colour": 0.35
  },
- "CURFEW": {
+ "MOONLIT": {
   "amount": 1.651,
   "size": 1.95,
   "colour": 0.22

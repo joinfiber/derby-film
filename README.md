@@ -8,19 +8,19 @@ own editor as `.cube` LUTs, or in a Flutter app as a fragment shader.
 ![The looks over a test chart](docs/swatches.png)
 
 *From the top: the untouched chart (ColorChecker patches, a grey ramp, a hue
-sweep), then NOON, GOLDIE, MOON, CHERRY, POOL, CURFEW and LIME.*
+sweep), then SUNSHINE, TOASTY, DREAMY, BLUSH, CHILLY, MOONLIT and ZESTY.*
 
 ## The looks
 
 | Look | Modelled from | How it's rendered |
 |---|---|---|
-| NOON | Kodak Ektachrome E100VS | A vivid slide, projected, exposed half a stop over for the faces |
-| GOLDIE | Kodak Gold 200 | Exposed a stop over, scanned hard, a quarter of a print mixed in |
-| MOON | Kodak Portra 400 | Exposed a stop over, scanned a little hard, a quarter of a print mixed in |
-| CHERRY | Kodachrome 64 | The slide with the deepest reds, projected, a quarter stop over for the faces |
-| POOL | Agfa Ultra 100 | Exposed a stop under, scanned hard, a quarter of a print mixed in |
-| CURFEW | Kodak Portra 800 | Scanned a little hard, a quarter of a print on Kodak Endura Premier mixed in |
-| LIME | Fujicolor Superia X-TRA 400 | At box speed, scanned a little hard |
+| SUNSHINE | Kodak Ektachrome E100VS | A vivid slide, projected, exposed half a stop over for the faces |
+| TOASTY | Kodak Gold 200 | Exposed a stop over, scanned hard, a quarter of a print mixed in |
+| DREAMY | Kodak Portra 400 | Exposed a stop over, scanned a little hard, a quarter of a print mixed in |
+| BLUSH | Kodachrome 64 | The slide with the deepest reds, projected, a quarter stop over for the faces |
+| CHILLY | Agfa Ultra 100 | Exposed a stop under, scanned hard, a quarter of a print mixed in |
+| MOONLIT | Kodak Portra 800 | Scanned a little hard, a quarter of a print on Kodak Endura Premier mixed in |
+| ZESTY | Fujicolor Superia X-TRA 400 | At box speed, scanned a little hard |
 
 These are models built from published curves, not the films themselves. They
 haven't been checked against real scans. The film names credit the datasheets
@@ -115,11 +115,11 @@ that still pass the test. Three films failed the test
 however they were exposed or scanned: Fujicolor Pro 160S and Pro 400H take
 about a quarter of deep skin's colour away, and Fujichrome Velvia darkens
 deep skin a full stop at any exposure and blows pale skin out before it
-stops. MOON, POOL and CHERRY use other films.
+stops. DREAMY, CHILLY and BLUSH use other films.
 
-A look paired with INK gives INK the look's colour at the photograph's own
+A look paired with INKY gives INKY the look's colour at the photograph's own
 brightness, as a colour filter in front of black-and-white film would, and
-INK's own tone: the two contrasts are never stacked.
+INKY's own tone: the two contrasts are never stacked.
 
 The film model and the datasheet curves come from
 [RAWmakase](https://github.com/pch/rawmakase/pull/404) (MIT). RAWmakase reads
