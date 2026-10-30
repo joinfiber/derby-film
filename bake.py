@@ -84,8 +84,8 @@ HERE = Path(__file__).resolve().parent
 # or the shadows down (Clarendon, Lo-Fi). A film scan on its own is quieter
 # than any of them, which reads as a better version of the photograph rather
 # than an expression, so each look is finished to that level: a floating
-# look (FEVER, HUSH, RUSH, AFTER) is printed light with a faded black, a
-# sinking one (CLUB, ACID) dense.
+# look (GOLDIE, MOON, CHERRY, CURFEW) is printed light with a faded black, a
+# sinking one (POOL, LIME) dense.
 #
 # Every look is fair to every complexion, measured in stops, which is the
 # unit skin is seen in. A lab scanner hinged on mid grey lifts pale skin and
@@ -124,7 +124,7 @@ LOOKS = {
     'club': {'stock': 'agfa-ultra-100', 'push': -1, 'contrast': 1.15, 'hinge': 1.5, 'print': 0.25,
              'colour': 1.35},
     # Fuji's greens at box speed, scanned a little hard, dense. (A stop under,
-    # the look ACID was first made as, drops deep skin into Superia's toe.)
+    # the look LIME was first made as, drops deep skin into Superia's toe.)
     'acid': {'stock': 'superia-xtra-400', 'push': 0, 'contrast': 1.1, 'hinge': 1.5,
              'colour': 1.5},
     # A fast negative half printed on Endura, printed dense, with its
@@ -136,8 +136,8 @@ LOOKS = {
 # The names Derby shows. The stocks are named only to credit their
 # datasheets: these are models, not the films, and nobody's trademark.
 NAMES = {
-    'flash': 'FLASH', 'heat': 'FEVER', 'hush': 'HUSH', 'rush': 'RUSH',
-    'club': 'CLUB', 'night': 'AFTER', 'acid': 'ACID',
+    'flash': 'NOON', 'heat': 'GOLDIE', 'hush': 'MOON', 'rush': 'CHERRY',
+    'club': 'POOL', 'night': 'CURFEW', 'acid': 'LIME',
 }
 # Derby's combinable looks. INK is Derby's own black-and-white curve, not a
 # film model, so it lives in the app and is read from its strip.

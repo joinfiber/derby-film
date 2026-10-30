@@ -4,37 +4,37 @@
   "size": 1.6,
   "colour": 0.3
  },
- "FLASH": {
+ "NOON": {
   "amount": 0.876,
   "size": 0.9,
   "colour": 0.18
  },
- "FEVER": {
+ "GOLDIE": {
   "amount": 1.376,
   "size": 1.25,
   "colour": 0.35
  },
- "HUSH": {
+ "MOON": {
   "amount": 1.0,
   "size": 1.6,
   "colour": 0.35
  },
- "RUSH": {
+ "CHERRY": {
   "amount": 0.871,
   "size": 0.9,
   "colour": 0.18
  },
- "CLUB": {
+ "POOL": {
   "amount": 0.795,
   "size": 0.9,
   "colour": 0.35
  },
- "ACID": {
+ "LIME": {
   "amount": 0.781,
   "size": 1.6,
   "colour": 0.35
  },
- "AFTER": {
+ "CURFEW": {
   "amount": 1.651,
   "size": 1.95,
   "colour": 0.22
