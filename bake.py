@@ -144,7 +144,7 @@ NAMES = {
 CREATIVE = ('flash', 'heat', 'hush', 'rush', 'club', 'night', 'acid', 'ink')
 # A pair's share of its first-named look. Derby's slider crossfades `a+b`
 # and `b+a`, so it moves the pair between 65/35 and 35/65.
-PAIR_LEAN = 0.65
+PAIR_LEAN = 0.5
 SIZE = 33
 
 SHAPE = colour.SpectralShape(380, 730, 5)
@@ -732,12 +732,28 @@ def over(base, top, share):
     return srgb_encode(share * srgb_decode(stacked) + (1 - share) * srgb_decode(base))
 
 
+def within_parents(table, a, b):
+    """A pair may be both its looks but never beyond either: at every colour
+    its lightness stays between its parents' and its chroma under the more
+    coloured parent's. Two looks stacked brightened olive skin two thirds of
+    a stop and coloured it half again, which read as blown out; the casts and
+    the hue, which are the pair's character, are left alone."""
+    lab = oklab(srgb_decode(table))
+    la, lb = oklab(srgb_decode(a)), oklab(srgb_decode(b))
+    light = np.clip(lab[..., :1], np.minimum(la[..., :1], lb[..., :1]), np.maximum(la[..., :1], lb[..., :1]))
+    chroma = np.linalg.norm(lab[..., 1:], axis=-1, keepdims=True)
+    allowed = np.maximum(np.linalg.norm(la[..., 1:], axis=-1, keepdims=True),
+                         np.linalg.norm(lb[..., 1:], axis=-1, keepdims=True))
+    ab = lab[..., 1:] * np.minimum(1.0, allowed / np.maximum(chroma, 1e-6))
+    return srgb_encode(into_gamut(from_oklab(np.concatenate([light, ab], axis=-1))))
+
+
 def pair(tables, a, b):
-    """The `a+b` strip: look a whole, with look b over it. Nobody else offers
-    pairs, and a pair that was a crossfade read as a softer third look. A pair
-    is now more look than either of its parents: Derby's slider runs between
-    `a+b` and `b+a`, so its middle is both looks, each over the other."""
-    return over(tables[a], tables[b], PAIR_LEAN)
+    """The `a+b` strip: look a whole, with look b over it, held within what
+    either parent does. Nobody else offers pairs, and a pair that was a
+    crossfade read as a softer third look. Derby's slider runs between `a+b`
+    and `b+a`, so its middle is both looks, each over the other."""
+    return within_parents(over(tables[a], tables[b], PAIR_LEAN), tables[a], tables[b])
 
 
 def write_png(path, table):
