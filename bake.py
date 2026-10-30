@@ -725,24 +725,19 @@ def mix(a, b, share):
     return srgb_encode(share * srgb_decode(a) + (1 - share) * srgb_decode(b))
 
 
-def through_filter(table):
-    """A look's colour at the photograph's own brightness: what a colour filter
-    in front of black-and-white film gives it. INK's tone is INK's own, so a
-    look's contrast and INK's are never stacked, which pushed deep skin down
-    twice over."""
-    lin = srgb_decode(table)
-    source = srgb_decode(strip_grid())
-    y_look = np.maximum(lin @ SRGB_LUMA, 1e-6)[..., None]
-    y_source = (source @ SRGB_LUMA)[..., None]
-    return srgb_encode(np.clip(lin * y_source / y_look, 0, 1))
+def over(base, top, share):
+    """`top` applied over the finished `base`, leaned in by `share`: the first
+    look whole, the second on top of it."""
+    stacked = sample(top, base)
+    return srgb_encode(share * srgb_decode(stacked) + (1 - share) * srgb_decode(base))
 
 
 def pair(tables, a, b):
-    if b == 'ink':
-        return sample(tables['ink'], through_filter(tables[a]))
-    if a == 'ink':
-        return mix(sample(tables['ink'], through_filter(tables[b])), tables['ink'], 0.5)
-    return mix(tables[a], tables[b], PAIR_LEAN)
+    """The `a+b` strip: look a whole, with look b over it. Nobody else offers
+    pairs, and a pair that was a crossfade read as a softer third look. A pair
+    is now more look than either of its parents: Derby's slider runs between
+    `a+b` and `b+a`, so its middle is both looks, each over the other."""
+    return over(tables[a], tables[b], PAIR_LEAN)
 
 
 def write_png(path, table):
