@@ -60,11 +60,15 @@ deep skin paid for it. These looks don't repeat that. Each one has to pass a
 test across ten complexions, from the palest to the deepest, under warm,
 white and cool light:
 
-- **Brightness:** pale and deep skin must move the same way, and the whole
-  ladder within 27 of 255 end to end. Deep skin is never pushed down by more
-  than 5.
-- **Colour:** deep skin must keep at least 87% of its colour, so it never
-  looks ashy, and pale skin is never pushed orange.
+- **Brightness, in stops:** around the middle of the ladder, a look does to
+  deep skin what it does to pale skin: the same amount in opposite directions
+  for a look that adds contrast, a lift for both for a look that floats. No
+  look takes deep skin down more than half a stop. (Stops, not 8-bit units:
+  a unit is a tenth of a stop on pale skin and a third of one on deep skin,
+  so a unit bound is secretly three times stricter on deep skin.)
+- **Colour:** deep skin keeps between 85% and 150% of its colour, so it is
+  never ashy and never the only thing the colour lands on, and pale skin is
+  never pushed orange.
 
 The bias is in the lab more than in the film. A lab scanner hinges its
 contrast on mid grey, and mid grey is where a pale face's shadow side sits:
@@ -86,9 +90,21 @@ the faces in it, as a careful photographer would. Five settings in
 - **`flare`:** stray light in the scanner, the projector's room or the
   print's, lifting the deepest tones.
 
-The settings were found by search, as the densest blacks that still pass the
-test, with black no lighter than 16 of 255. Nothing is saturated or lifted by
-hand: every look is the stock's own colour. Three films failed the test
+After the film, `finish()` is what the lab does with the picture, and it is
+where the looks get their intensity: `exposure` (the print's density, in
+stops), `fade` (black lifted by a share of white, as a print seen in a bright
+room), `amplify` (the film's own hue shifts and casts, scaled in Oklab, so a
+film that deepens reds and quiets blues does more of exactly that) and
+`colour` (the result's chroma). The level is set against what people reach
+for: measured the same way, the popular Instagram filters sit at a mid-tone
+contrast of 1.1 to 1.3 times the photograph's, keep 1.0 to 1.3 times its
+colour, and above all move the whole picture, a third of a stop up into a
+fade or the shadows down. A film scan on its own is quieter than any of
+them, and reads as a better version of the photograph rather than an
+expression.
+
+The settings were found by search, as the most colour and the strongest tone
+that still pass the test. Three films failed the test
 however they were exposed or scanned: Fujicolor Pro 160S and Pro 400H take
 about a quarter of deep skin's colour away, and Fujichrome Velvia darkens
 deep skin a full stop at any exposure and blows pale skin out before it

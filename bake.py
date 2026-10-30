@@ -65,45 +65,67 @@ HERE = Path(__file__).resolve().parent
 # how hard the lab sets its scanner's contrast (`contrast`, 1 is the film's
 # own gamma) and where that contrast hinges (`hinge`, stops below mid grey:
 # the tone that comes out exactly as it went in); the share of a print on the
-# stock's paper mixed in as light (`print`, 1 is a print alone); and the stray
+# stock's paper mixed in as light (`print`, 1 is a print alone); the stray
 # light that lifts the deepest tones of a scan, print or projection (`flare`,
 # a share of white; slides default to PROJECTION_FLARE, prints to
-# PRINT_FLARE).
+# PRINT_FLARE); and then what the lab does with the picture (`finish()`):
+# the print's density (`exposure`, stops), its fade (`fade`, black lifted by
+# a share of white), how loudly the film's own colour is spoken (`amplify`,
+# the film's hue shifts and casts scaled in Oklab) and the result's chroma
+# (`colour`).
 #
-# Every look is fair to every complexion, and the fix is in the lab, not in
-# the film's colour. A lab scanner hinged on mid grey lifts pale skin and
+# The intensity is set against what people reach for. Measured the same way,
+# the popular filters sit at a mid-tone contrast of 1.1 to 1.3 times the
+# photograph's, keep 1.0 to 1.3 times its colour, and above all move the
+# whole picture: a third of a stop up into a fade (Juno, Gingham, Valencia)
+# or the shadows down (Clarendon, Lo-Fi). A film scan on its own is quieter
+# than any of them, which reads as a better version of the photograph rather
+# than an expression, so each look is finished to that level: a floating
+# look (FEVER, HUSH, RUSH, AFTER) is printed light with a faded black, a
+# sinking one (CLUB, ACID) dense.
+#
+# Every look is fair to every complexion, measured in stops, which is the
+# unit skin is seen in. A lab scanner hinged on mid grey lifts pale skin and
 # pushes deep skin down, because mid grey is where a pale face's shadow side
 # sits: the Shirley-card bias, restated. These scans hinge a stop and a half
 # lower, on the middle of a ten-tone complexion ladder, so pale and deep skin
-# move by about the same amount in stops, in opposite directions, around the
-# middle of the range of faces. A slide has no lab, so it is exposed a
-# fraction of a stop over for the faces in it. Each look was searched over
-# exposure, contrast, hinge, print and flare for the densest blacks that keep
-# the ladder, under warm, white and cool light, within 27 of 255 end to end
-# and in one direction, deep skin within 5 and keeping 87% of its colour,
-# with black no lighter than 16 of 255. Nothing is saturated or lifted by
-# hand: every look is the stock's own colour.
+# move by about the same amount in opposite directions around the middle of
+# the range of faces; a floating look lifts deep skin at least as much as
+# pale; no look takes deep skin down more than half a stop, and deep skin
+# keeps between 85% and 150% of its colour (Clarendon gives it 157%) while
+# pale skin keeps under 130%. A slide has no lab, so it is exposed a fraction
+# of a stop over for the faces in it. Within those bounds each look was
+# searched for the most colour and the strongest tone.
 LOOKS = {
     # A vivid slide, projected, exposed half a stop over for the faces.
     'flash': {'stock': 'ektachrome-e100vs', 'push': 0.5, 'flare': 0.004},
-    # A warm consumer negative a stop over, scanned hard, a quarter of a print.
-    'heat': {'stock': 'gold-200', 'push': 1, 'contrast': 1.15, 'hinge': 1.5, 'print': 0.25},
-    # A portrait negative a stop over, the airy pastel of overexposed Portra,
-    # scanned a little hard, a quarter of a print. (Fujicolor Pro 160S and
-    # 400H take a quarter of deep skin's colour away however they are scanned.)
-    'hush': {'stock': 'portra-400', 'push': 1, 'contrast': 1.1, 'hinge': 1.5, 'print': 0.25},
-    # The slide with the deepest reds, projected, a quarter stop over for the
-    # faces. (Velvia darkens deep skin a full stop at any exposure, and blows
-    # pale skin out before it stops: it was never made for faces.)
-    'rush': {'stock': 'kodachrome-64', 'push': 0.25, 'flare': 0.004},
-    # A cool negative a stop under: teal shadows, scanned hard, a quarter of
-    # a print.
-    'club': {'stock': 'agfa-ultra-100', 'push': -1, 'contrast': 1.15, 'hinge': 1.5, 'print': 0.25},
-    # Fuji's greens at box speed, scanned a little hard. (A stop under, the
-    # look ACID was first made as, drops deep skin into Superia's toe.)
-    'acid': {'stock': 'superia-xtra-400', 'push': 0, 'contrast': 1.1, 'hinge': 1.5},
-    # A fast negative scanned a little hard, a quarter of a print on Endura.
-    'night': {'stock': 'portra-800', 'contrast': 1.1, 'hinge': 1.5, 'print': 0.25},
+    # A warm consumer negative a stop over, scanned hard with a quarter of a
+    # print, printed light and faded: hot skin.
+    'heat': {'stock': 'gold-200', 'push': 1, 'contrast': 1.15, 'hinge': 1.5, 'print': 0.25,
+             'colour': 1.5, 'exposure': 0.15, 'fade': 0.02},
+    # A portrait negative a stop over, the airy pastel of overexposed Portra
+    # with its colour spoken twice as loudly, printed light and faded.
+    # (Fujicolor Pro 160S and 400H take a quarter of deep skin's colour away
+    # however they are scanned.)
+    'hush': {'stock': 'portra-400', 'push': 1, 'contrast': 1.1, 'hinge': 1.5, 'print': 0.25,
+             'amplify': 2.0, 'colour': 1.65, 'exposure': 0.15, 'fade': 0.02},
+    # The slide with the deepest reds, a quarter stop over for the faces,
+    # faded as an old slide is. (Velvia darkens deep skin a full stop at any
+    # exposure, and blows pale skin out before it stops: never made for faces.)
+    'rush': {'stock': 'kodachrome-64', 'push': 0.25, 'flare': 0.004,
+             'amplify': 1.5, 'colour': 1.2, 'exposure': 0.15, 'fade': 0.02},
+    # A cool negative a stop under: teal shadows, scanned hard with a quarter
+    # of a print, dense.
+    'club': {'stock': 'agfa-ultra-100', 'push': -1, 'contrast': 1.15, 'hinge': 1.5, 'print': 0.25,
+             'colour': 1.35},
+    # Fuji's greens at box speed, scanned a little hard, dense. (A stop under,
+    # the look ACID was first made as, drops deep skin into Superia's toe.)
+    'acid': {'stock': 'superia-xtra-400', 'push': 0, 'contrast': 1.1, 'hinge': 1.5,
+             'colour': 1.5},
+    # A fast negative with a quarter of a print on Endura, its colour spoken
+    # louder, faded like a print left out.
+    'night': {'stock': 'portra-800', 'contrast': 1.1, 'hinge': 1.5, 'print': 0.25,
+              'amplify': 1.5, 'colour': 1.65, 'fade': 0.02},
 }
 # The names Derby shows. The stocks are named only to credit their
 # datasheets: these are models, not the films, and nobody's trademark.
@@ -601,15 +623,60 @@ def build_model(look):
     return Look(LOOKS[look])
 
 
+# Oklab (Björn Ottosson, 2020): a perceptual space whose hue stays put as
+# lightness and chroma change, used only to amplify a look's own colour.
+OKLAB_M1 = np.array([[0.4122214708, 0.5363325363, 0.0514459929],
+                     [0.2119034982, 0.6806995451, 0.1073969566],
+                     [0.0883024619, 0.2817188376, 0.6299787005]])
+OKLAB_M2 = np.array([[0.2104542553, 0.7936177850, -0.0040720468],
+                     [1.9779984951, -2.4285922050, 0.4505937099],
+                     [0.0259040371, 0.7827717662, -0.8086757660]])
+OKLAB_M1_INV = np.linalg.inv(OKLAB_M1)
+OKLAB_M2_INV = np.linalg.inv(OKLAB_M2)
+
+
+def oklab(lin):
+    return np.cbrt(np.maximum(lin @ OKLAB_M1.T, 0)) @ OKLAB_M2.T
+
+
+def from_oklab(lab):
+    return ((lab @ OKLAB_M2_INV.T) ** 3) @ OKLAB_M1_INV.T
+
+
+def finish(identity, out, spec):
+    """What the lab does after the film: the print's density and its fade,
+    and how loudly the film's own colour is spoken. Linear sRGB in and out.
+
+    `exposure` moves the whole picture, in stops. `fade` lifts black by a share
+    of white, as a print seen in a bright room, or a scan with its black point
+    set high, is lifted. `amplify` scales the look's own colour change, the
+    hue shifts and casts the film gives each colour relative to the untouched
+    photograph, in Oklab, so a film that deepens reds and quiets blues does
+    more of exactly that; `colour` then scales the result's chroma. Lightness
+    is left to the lab's contrast and hinge."""
+    out = out * 2 ** spec.get('exposure', 0.0) + spec.get('fade', 0.0)
+    k, g = spec.get('amplify', 1.0), spec.get('colour', 1.0)
+    if k != 1.0 or g != 1.0:
+        before = oklab(np.clip(identity, 0, 1))
+        after = oklab(np.maximum(out, 0))
+        ab = (before[..., 1:] + k * (after[..., 1:] - before[..., 1:])) * g
+        out = from_oklab(np.concatenate([after[..., :1], ab], axis=-1))
+    return out
+
+
+def render(spec, srgb):
+    """Encoded sRGB colours through a look, as the strip is baked."""
+    look = Look(spec)
+    lin = srgb_decode(srgb)
+    scene = hue_preserving(lin @ SRGB_TO_PRO.T, untone)
+    out = look.display(scene.reshape(-1, 3)).reshape(srgb.shape) @ PRO_TO_SRGB.T
+    return srgb_encode(into_gamut(finish(lin, out, spec)))
+
+
 def bake(look, data_dir):
     """The look's strip as sRGB-encoded floats, shaped like `strip_grid()`."""
     load_data(data_dir)
-    model = build_model(look)
-    grid = strip_grid()
-    display = srgb_decode(grid) @ SRGB_TO_PRO.T
-    scene = hue_preserving(display, untone)
-    out = model.display(scene.reshape(-1, 3)).reshape(grid.shape)
-    return look, srgb_encode(into_gamut(out @ PRO_TO_SRGB.T))
+    return look, render(LOOKS[look], strip_grid())
 
 
 def sample(table, rgb):
