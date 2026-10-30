@@ -64,7 +64,10 @@ HERE = Path(__file__).resolve().parent
 # negative is then balanced by the lab, a slide is simply that much brighter);
 # how hard the lab sets its scanner's contrast (`contrast`, 1 is the film's
 # own gamma) and where that contrast hinges (`hinge`, stops below mid grey:
-# the tone that comes out exactly as it went in); the share of a print on the
+# the tone that comes out exactly as it went in); how much of the film's
+# own layer mismatch the lab leaves in (`crossover`, 1 is the stock's own,
+# negative is over-corrected: shadows and highlights drift into opposite
+# casts while grey stays grey); the share of a print on the
 # stock's paper mixed in as light (`print`, 1 is a print alone); the stray
 # light that lifts the deepest tones of a scan, print or projection (`flare`,
 # a share of white; slides default to PROJECTION_FLARE, prints to
@@ -100,15 +103,17 @@ LOOKS = {
     # A vivid slide, projected, exposed half a stop over for the faces.
     'flash': {'stock': 'ektachrome-e100vs', 'push': 0.5, 'flare': 0.004},
     # A warm consumer negative a stop over, scanned hard with a quarter of a
-    # print, printed light and faded: hot skin.
+    # print and twice its own layer mismatch left in: warm shadows, cool
+    # whites. Hot skin, not orange skin.
     'heat': {'stock': 'gold-200', 'push': 1, 'contrast': 1.15, 'hinge': 1.5, 'print': 0.25,
-             'colour': 1.5, 'exposure': 0.15, 'fade': 0.02},
-    # A portrait negative a stop over, the airy pastel of overexposed Portra
-    # with its colour spoken twice as loudly, printed light and faded.
-    # (Fujicolor Pro 160S and 400H take a quarter of deep skin's colour away
-    # however they are scanned.)
-    'hush': {'stock': 'portra-400', 'push': 1, 'contrast': 1.1, 'hinge': 1.5, 'print': 0.25,
-             'amplify': 2.0, 'colour': 1.65, 'exposure': 0.15, 'fade': 0.02},
+             'crossover': 1.5, 'colour': 1.15},
+    # A portrait negative a stop over, the airy pastel of overexposed Portra,
+    # scanned soft with its mismatch left in (warm shadows under cool, faded
+    # highlights), printed light and faded, its colour kept quiet. (Fujicolor
+    # Pro 160S and 400H take a quarter of deep skin's colour away however
+    # they are scanned.)
+    'hush': {'stock': 'portra-400', 'push': 1, 'contrast': 1.1, 'hinge': 1.5,
+             'crossover': 1.5, 'colour': 1.0, 'exposure': 0.15, 'fade': 0.02},
     # The slide with the deepest reds, a quarter stop over for the faces,
     # faded as an old slide is. (Velvia darkens deep skin a full stop at any
     # exposure, and blows pale skin out before it stops: never made for faces.)
@@ -122,10 +127,11 @@ LOOKS = {
     # the look ACID was first made as, drops deep skin into Superia's toe.)
     'acid': {'stock': 'superia-xtra-400', 'push': 0, 'contrast': 1.1, 'hinge': 1.5,
              'colour': 1.5},
-    # A fast negative with a quarter of a print on Endura, its colour spoken
-    # louder, faded like a print left out.
-    'night': {'stock': 'portra-800', 'contrast': 1.1, 'hinge': 1.5, 'print': 0.25,
-              'amplify': 1.5, 'colour': 1.65, 'fade': 0.02},
+    # A fast negative half printed on Endura, printed dense, with its
+    # mismatch over-corrected the way a late lab does: blue-black shadows
+    # under warm, flash-lit skin.
+    'night': {'stock': 'portra-800', 'contrast': 1.2, 'hinge': 1.5, 'print': 0.5,
+              'crossover': -1.5, 'colour': 1.1, 'exposure': -0.05},
 }
 # The names Derby shows. The stocks are named only to credit their
 # datasheets: these are models, not the films, and nobody's trademark.
@@ -367,11 +373,13 @@ def blackbody(k):
 
 
 class Model:
-    def __init__(self, film, paper=None, push=0, contrast=1.0, flare=None, hinge=0.0):
+    def __init__(self, film, paper=None, push=0, contrast=1.0, flare=None, hinge=0.0,
+                 crossover=0.0):
         self.film = film
         self.contrast = contrast
         self.flare = flare
         self.hinge = hinge
+        self.crossover = crossover
         spectra, residual = jakob_shapes()
         cc = colorchecker()
         k = np.linalg.lstsq(reflectance_xyz(cc), film.exposure(cc), rcond=None)[0].T
@@ -424,13 +432,29 @@ class Model:
         # A lab scanner balanced on grey, its contrast set `contrast` times the
         # film's own gamma: the straight part stays neutral, and blacks and
         # whites move apart around mid grey.
-        steep = self.contrast / self.gamma
+        # A film's three layers have three gammas, and a lab balances them away
+        # so that grey stays grey at every density. `crossover` leaves a share
+        # of that mismatch in (1 is the stock's own, 2 twice it): the hinge tone
+        # stays neutral and the shadows and highlights drift apart into the
+        # casts the stock's own curves give, one way below, the other above.
+        # It is the look of film printed or scanned without a full correction,
+        # and it is each stock's own.
+        balanced = self.gamma ** (1 - self.crossover) * np.exp(np.log(self.gamma).mean()) ** self.crossover
+        steep = self.contrast / balanced
         # Where the scanner's contrast hinges: mid grey, or `hinge` stops
         # below it, the tone that comes out exactly as it went in.
         hinge_gray = SCENE_GRAY * 2 ** -self.hinge
         d_hinge = density(self.film.curves, np.full(3, self.log_h_gray - self.hinge * np.log10(2)))
         positive = hinge_gray * 10 ** ((d - d_hinge) * steep)
         base = hinge_gray * 10 ** ((self.d_min - d_hinge) * steep)
+        if self.crossover:
+            # The lab's colour balance is on mid grey whatever the contrast
+            # hinges on, so with the mismatch left in, grey stays grey and the
+            # shadows and highlights take opposite casts: the stock's own
+            # below, their complement above. Brightness at grey is unchanged.
+            at_gray = hinge_gray * 10 ** ((self.d_gray - d_hinge) * steep)
+            neutral = np.exp(np.log(at_gray).mean()) / at_gray
+            positive, base = positive * neutral, base * neutral
         positive = hinge_gray * (positive - base) / (hinge_gray - base)
         out = hue_preserving(positive @ self.matrix.T, tone)
         # A scanner's own flare: stray light in its optics lifts the deepest
@@ -603,7 +627,8 @@ class Look:
         paper = Film(datasheet(PAPERS[data['kind']])) if share > 0 else None
         flare = spec.get('flare')
         self.primary = Model(film, paper if share >= 1 else None, push,
-                             spec.get('contrast', 1.0), flare, spec.get('hinge', 0.0))
+                             spec.get('contrast', 1.0), flare, spec.get('hinge', 0.0),
+                             spec.get('crossover', 0.0))
         self.printed = Model(film, paper, push, flare=flare) if 0 < share < 1 else None
         self.share = share
         self.gamma = self.primary.gamma

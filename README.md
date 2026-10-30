@@ -86,6 +86,13 @@ the faces in it, as a careful photographer would. Five settings in
   balanced by the lab; a slide is simply that much brighter.
 - **`contrast`** and **`hinge`:** how hard the lab sets its scanner, and the
   tone it balances it on.
+- **`crossover`:** how much of the film's own layer mismatch the lab leaves
+  in. A film's three layers have three gammas; a lab balances them away so
+  grey stays grey at every density. Left in, grey stays grey at mid grey and
+  the shadows and highlights drift into opposite casts, the stock's own
+  (warm shadows under cool highlights on the Kodak negatives); over-corrected
+  (a negative value), the other way. It is where a look's parts move in
+  different directions, and it is each stock's own.
 - **`print`:** how much of a print is mixed in.
 - **`flare`:** stray light in the scanner, the projector's room or the
   print's, lifting the deepest tones.
