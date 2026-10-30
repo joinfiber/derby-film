@@ -117,9 +117,13 @@ about a quarter of deep skin's colour away, and Fujichrome Velvia darkens
 deep skin a full stop at any exposure and blows pale skin out before it
 stops. DREAMY, CHILLY and BLUSH use other films.
 
-A look paired with INKY gives INKY the look's colour at the photograph's own
-brightness, as a colour filter in front of black-and-white film would, and
-INKY's own tone: the two contrasts are never stacked.
+INKY is stated rather than modelled, since Derby holds no black-and-white
+datasheet (`INK` in `bake.py`): a panchromatic film under a light yellow
+filter, a straight contrast about mid grey printed a third of a stop dense,
+a shoulder and a faded black. It is measured by the same rule as the colour
+looks (pale skin +0.23 stops, deep skin -0.30). Its first curve was plain
+luminance with a crushed toe, which took deep skin down two stops while
+leaving pale skin alone. A pair with INKY stacks like any other pair.
 
 The film model and the datasheet curves come from
 [RAWmakase](https://github.com/pch/rawmakase/pull/404) (MIT). RAWmakase reads
