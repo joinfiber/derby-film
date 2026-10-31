@@ -139,8 +139,8 @@ NAMES = {
     'flash': 'SUNSHINE', 'heat': 'TOASTY', 'hush': 'DREAMY', 'rush': 'BLUSH',
     'club': 'CHILLY', 'night': 'MOONLIT', 'acid': 'ZESTY',
 }
-# Derby's combinable looks. INKY is Derby's own black-and-white curve, not a
-# film model, so it lives in the app and is read from its strip.
+# Derby's combinable looks. INKY is a black-and-white look stated rather than
+# modelled, since Derby holds no black-and-white datasheet (`INK`, below).
 CREATIVE = ('flash', 'heat', 'hush', 'rush', 'club', 'night', 'acid', 'ink')
 # A pair's share of its first-named look. Derby's slider crossfades `a+b`
 # and `b+a`, so it moves the pair between 65/35 and 35/65.
@@ -689,6 +689,32 @@ def finish(identity, out, spec):
     return out
 
 
+# INKY, stated: a panchromatic film seen through a light yellow filter (`mix`,
+# the share of each channel in its brightness: skin a touch lighter than its
+# luminance, sky and shade a touch darker), a straight `contrast` about mid
+# grey, printed `exposure` stops dense, a shoulder from `knee` on so white
+# rolls off instead of clipping, and a `fade` that keeps black from going
+# solid. Mid grey comes out where it went in less the exposure, so pale skin
+# rises and deep skin falls by about the same amount, the fairness rule the
+# colour looks keep. The curve it replaces was plain luminance with a crushed
+# toe: deep skin went down two stops while pale skin stayed, the failure the
+# fairness test exists for. Measured on the complexion ladder: pale +0.23
+# stops, deep -0.30, black 13/255.
+INK = {'mix': (0.30, 0.59, 0.11), 'contrast': 1.25, 'exposure': -0.3, 'knee': 0.6,
+       'fade': 0.004}
+
+
+def render_ink(srgb, spec=None):
+    """Encoded sRGB colours through INKY: the same grey in every channel."""
+    spec = INK if spec is None else spec
+    y = srgb_decode(srgb) @ np.array(spec['mix'], float)
+    out = SCENE_GRAY * (np.maximum(y, 1e-6) / SCENE_GRAY) ** spec['contrast'] * 2 ** spec['exposure']
+    knee = spec['knee']
+    out = np.where(out > knee, knee + (1 - knee) * (1 - np.exp(-(out - knee) / (1 - knee))), out)
+    out = out + spec['fade']
+    return srgb_encode(np.repeat(out[..., None], 3, axis=-1))
+
+
 def render(spec, srgb):
     """Encoded sRGB colours through a look, as the strip is baked."""
     look = Look(spec)
@@ -1020,7 +1046,8 @@ def main():
         write_png(luts / f'{look}.png', tables[look])
     if args.only:
         return
-    tables['ink'] = read_png(luts / 'ink.png')
+    tables['ink'] = render_ink(strip_grid())
+    write_png(luts / 'ink.png', tables['ink'])
     count = 0
     for a in CREATIVE:
         for b in CREATIVE:
